@@ -17,9 +17,14 @@
   "dependencies": {
     "@hiveio/dhive": "^1.2.8",
     "@hiveio/keychain": "^1.0.7",
+    "crypto-browserify": "^3.12.0",
+    "crypto-js": "^4.2.0",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "ipfs-only-hash": "^4.0.0"
+    "html-webpack-plugin": "^5.6.0",
+    "ipfs-only-hash": "^4.0.0",
+    "stream": "^0.0.2",
+    "vm": "^0.1.0"
   },
   "devDependencies": {
     "@babel/core": "^7.23.7",

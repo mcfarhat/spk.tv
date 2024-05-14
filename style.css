@@ -10,6 +10,7 @@ body {
     margin-right: 20px; /* Space between logo and any other nav items */
 }
 
+
 /* Sidebar styling */
 #sidebar {
     position: fixed; /* Fix the sidebar to the left */
@@ -266,7 +267,11 @@ nav {
     border-radius: 8px; /* Optional: rounded corners for the thumbnail */
     margin-bottom: 8px; /* Space between the thumbnail and the title */
 }
-
+.image-thumbnail, video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
 /* Style for the add button within the image placeholder */
 .add-button {
     position: absolute;
@@ -288,7 +293,7 @@ nav {
 .image-grid .image-placeholder {
     position: relative;
     width: 100%;
-    padding-top: 100%; /* This creates a 1:1 aspect ratio */
+    height: 250px;
 }
 
 .image-grid .image-thumbnail {

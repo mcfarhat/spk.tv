@@ -49,6 +49,10 @@
                 <p>Drag and drop a file here, or click to select a file</p>
                 <input type="file" id="fileUpload" name="fileUpload" required hidden>
             </div>
+            <div>
+                <input type="checkbox" id="encryptCheckbox" name="encryptCheckbox">
+                <label for="encryptCheckbox">Encrypt File</label>
+            </div>
             <button type="button" id="nextToStep2" style="margin-top: 20px;">Next</button>
           </div>
           <div class="modal-step" id="step2" style="display: none;">
@@ -86,6 +90,7 @@
     <span class="close">&times;</span>
     <button id="extendButton">Extend</button>
     <button id="storeFileButton">Store File</button>
+    <button id="deleteFileButton">Delete File</button>
     <div class="storage-nodes-section">
       <h3>STORAGE NODES</h3>
       <ul id="storageNodesList">
@@ -200,6 +205,6 @@
     <div id="loginStatus"></div>
 
     <!-- Your custom JS -->
-    <script src="dist/bundle.js"></script>
+    <script src="dist/bundle.js" defer></script>
     </body>
     </html>

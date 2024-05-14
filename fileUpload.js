@@ -1,5 +1,7 @@
 import IPFS from 'ipfs-only-hash';
-
+import { encryptMessage } from './encryption.js';
+import { pollForNewChannels } from './contracts.js';
+import { updateMyFiles } from './ui.js';
 // Function to trigger file selection when the drop area is clicked
 function triggerFileSelect() {
     const fileInput = document.getElementById('fileUpload');
@@ -60,12 +62,21 @@ function handleFiles(files) {
     fileInput.files = files;
 }
 
-document.getElementById('uploadFileButton').addEventListener('click', function(event) {
+async function convertToBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = error => reject(error);
+    });
+}
+
+document.getElementById('uploadFileButton').addEventListener('click', async function(event) {
     event.preventDefault(); // Prevent the default form submission
     const fileInput = document.getElementById('fileUpload');
     if (fileInput.files.length > 0) {
         const file = fileInput.files[0];
-        uploadFile(file); // Call the uploadFile function with the selected file
+            uploadFile(file); // Call the uploadFile function with the selected file
     } else {
         alert('Please select a file to upload.');
     }
@@ -119,12 +130,48 @@ document.getElementById('fileUpload').addEventListener('change', function(event)
     }
 });
 
-export function uploadFile(file) {
+export async function uploadFile(file) {
+    console.log('Uploading file:', file);
     const username = localStorage.getItem('hive_username');
     const channelInput = document.querySelector('input[name="channelSelection"]:checked');
     // Check if the channel input is not null before trying to access its value
     const channelId = channelInput ? channelInput.value : null;
-    const ipfsHash = document.getElementById('fileUpload').getAttribute('data-ipfs-hash');
+    const encryptCheckbox = document.getElementById('encryptCheckbox');
+
+    let ipfsHash;
+
+    if (encryptCheckbox.checked) {
+        try {
+            const fileContent = await convertToBase64(file);
+            console.log('File content:', fileContent);
+            encryptMessage(username, fileContent, async (err, encryptedMessage) => {
+                if (err) {
+                    alert('Encryption failed: ' + err);
+                } else {
+                    try {
+                        encryptedMessage = 'encrypted:' + file.type + encryptedMessage +"#"+file.name; // Prefix the encrypted message with 'encrypted:
+                        const encryptedFile = new Blob([encryptedMessage], { type: file.type });
+                        console.log('Encrypted file:', encryptedFile);
+                        ipfsHash = await IPFS.of([new Uint8Array(await encryptedFile.arrayBuffer())]);
+                        console.log('IPFS hash of encrypted file:', ipfsHash);
+                        signAndUploadFile(encryptedFile, username, channelId, ipfsHash);
+                    } catch (error) {
+                        console.error('Error generating IPFS hash for encrypted file:', error);
+                        alert('Error generating IPFS hash for encrypted file: ' + error);
+                    }
+                }
+            });
+        } catch (error) {
+            console.error('Error converting file to base64:', error);
+        }
+    } else {
+        ipfsHash = await IPFS.of([new Uint8Array(await file.arrayBuffer())]);
+        console.log('IPFS hash of file:', ipfsHash);
+        signAndUploadFile(file, username, channelId, ipfsHash);
+    }
+}
+
+function signAndUploadFile(file, username, channelId, ipfsHash) {
     const message = `${username}:${channelId},${ipfsHash}`;
     console.log('Signing message:', message);
     if (window.hive_keychain && typeof window.hive_keychain.requestSignBuffer === 'function') {
@@ -219,6 +266,10 @@ export function initiateFileUploadWithProgress(file, username, channelId, ipfsHa
         .then(uploadData => {
             console.log('File uploaded successfully:', uploadData);
             uploadProgress.textContent = 'Upload complete!'; // Show upload complete message
+            // wait for the file to be added to the blockchain
+            setTimeout(() => {
+                updateMyFiles();
+            }, 5000);
         })
         .catch(error => {
             console.error('Error in file upload process:', error);

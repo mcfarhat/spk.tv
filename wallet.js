@@ -1,5 +1,3 @@
-import { updateUserProfilePicture } from './ui.js';
-
 // Event listener for the SPK Power Up button to open the modal
 document.getElementById('powerUpButton').addEventListener('click', function() {
     document.getElementById('powerUpModal').style.display = 'block';
@@ -57,13 +55,11 @@ export function displayWallet() {
     if (username) {
         // Fetch user's wallet balance from the blockchain or a database
         // For demonstration, we'll call a function that updates the wallet balance
-        updateUserProfilePicture(username); // Assuming this function fetches and displays the balance
         document.querySelector('.image-grid').style.display = 'none'; // Hide the image grid
         document.getElementById('walletContent').style.display = 'block';
         // Update the available SPK balance for the power up modal
         document.getElementById('availableSPKBalance').innerText = document.getElementById('spkBalance').innerText;
         const brocaBalance = document.getElementById('balance').innerText.split(':')[1].trim();
-        document.getElementById('walletBalance').innerText = `Broca: ${brocaBalance}`;
     } else {
         // If no username is found, display a message or redirect to login
         console.log('User is not logged in. Redirecting to login...');

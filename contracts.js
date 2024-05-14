@@ -1,5 +1,3 @@
-import { updateUserProfilePicture } from './ui.js';
-
 // Event listener for the new file button to open the new file modal
 document.getElementById('newButton').addEventListener('click', function() {
     document.getElementById('newFileModal').style.display = 'block';
@@ -86,7 +84,7 @@ document.getElementById('createContractButton').addEventListener('click', functi
 });
 
 // Function to poll for new channels until one is found open
-function pollForNewChannels(username) {
+export function pollForNewChannels(username) {
     const statusBar = document.getElementById('statusBar');
     const statusMessage = document.getElementById('statusMessage');
     statusBar.style.display = 'block'; // Show the status bar

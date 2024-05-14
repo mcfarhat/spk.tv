@@ -1,25 +1,7 @@
-import { logout, updateLoginStatus } from './login.js';
 import { storeSelectedFilesOnBlockchain, extendContractOnBlockchain } from './contracts.js';
 import { displayWallet } from './wallet.js';
-
-// Get the modal
-var modal = document.getElementById("loginModal");
-
-// Get the button that opens the modal
-var btn = document.getElementById("loginButton");
-
-// Get the <span> element that closes the modal
-var span = document.getElementsByClassName("close")[0];
-
-// When the user clicks the button, open the modal
-btn.onclick = function() {
-    modal.style.display = "block";
-}
-
-// When the user clicks on <span> (x), close the modal
-span.onclick = function() {
-    modal.style.display = "none";
-}
+import { decryptMessage } from "./encryption";
+import {logout} from "./login";
 
 // Function to handle the initial hash when the page loads
 export function handleInitialHash() {
@@ -39,10 +21,7 @@ export function handleInitialHash() {
 
 // Function to fetch Hive balance
 export function fetchHiveBalance(username) {
-    // Hive blockchain API endpoint (change if you have a specific node you're using)
     const apiUrl = 'https://api.hive.blog';
-
-    // Hive API request body
     const requestBody = {
         jsonrpc: '2.0',
         method: 'condenser_api.get_accounts',
@@ -60,92 +39,15 @@ export function fetchHiveBalance(username) {
         .then(response => response.json())
         .then(data => {
             if (data.result && data.result.length > 0) {
-                // Assuming the balance is in the 'balance' field of the response
                 const balance = data.result[0].balance;
-                document.getElementById('balance').innerText = balance; // Display only the balance
+                document.getElementById('balance').innerText = balance;
             } else {
-                document.getElementById('balance').innerText = ''; // Clear the balance text
+                document.getElementById('balance').innerText = '';
             }
         })
         .catch(error => {
             console.error('Error fetching Hive balance:', error);
-            document.getElementById('balance').innerText = ''; // Clear the balance text
-        });
-}
-
-// Update the login button to show the user's profile picture after successful login
-// This function will be called after a successful login
-export function updateUserProfilePicture(username) {
-    // Hive blockchain API endpoint
-    const apiUrl = 'https://api.hive.blog';
-    const spkApiUrl = `https://spktest.dlux.io/@${username}`;
-    // Update the login button to show "Logout" instead of "Login"
-    const loginButton = document.getElementById('loginButton');
-    loginButton.textContent = 'Logout';
-    loginButton.removeEventListener('click', btn.onclick);
-    loginButton.addEventListener('click', logout);
-
-    // Hive API request body to get account details
-    const requestBody = {
-        jsonrpc: '2.0',
-        method: 'condenser_api.get_accounts',
-        params: [[username]],
-        id: 1
-    };
-
-    fetch(apiUrl, {
-        method: 'POST',
-        body: JSON.stringify(requestBody),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-        .then(response => response.json())
-        .then(data => {
-            if (data.result && data.result.length > 0) {
-                // Extracting profile picture URL from posting_json_metadata
-                const postingMetaData = data.result[0].posting_json_metadata ? JSON.parse(data.result[0].posting_json_metadata) : {};
-                const profilePictureUrl = postingMetaData.profile && postingMetaData.profile.profile_image ? postingMetaData.profile.profile_image : 'default_profile_pic_url.jpg';
-
-                // Update the login button to show the profile picture
-                var loginButton = document.getElementById("loginButton");
-                loginButton.style.backgroundImage = "url('" + profilePictureUrl + "')";
-                loginButton.style.backgroundSize = 'cover';
-                loginButton.textContent = ''; // Remove the text from the button
-
-                // Fetch additional user data from SPK API
-                fetch(spkApiUrl)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Handle the SPK API data
-                        // Extract and display the Broca balance
-                        if (data.broca) {
-                            const brocaBalance = data.broca.split(',')[0];
-                            document.getElementById('balance').innerText = `Broca: ${brocaBalance}`;
-                            document.getElementById('brocaBalance').innerText = `${brocaBalance} BROCA`;
-                        }
-                        // Extract and display the SPK Power balance
-                        if (data.spk_power) {
-                            const spkPowerBalance = data.spk_power;
-                            document.getElementById('spkPowerBalance').innerText = `${spkPowerBalance} SPK Power`;
-                        }
-                        // Extract and display the SPK balance
-                        if (data.spk) {
-                            const spkBalance = data.spk;
-                            document.getElementById('spkBalance').innerText = `${spkBalance} SPK`;
-                        }
-                        updateImagePlaceholders(data.file_contracts);
-                        // You can update the UI or perform other actions with the data here
-                    })
-                    .catch(error => {
-                        console.error('Error fetching data from SPK API:', error);
-                    });
-            } else {
-                console.log('Unable to fetch account details');
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching account details:', error);
+            document.getElementById('balance').innerText = '';
         });
 }
 
@@ -158,7 +60,7 @@ function openImageModal(imageUrl) {
 }
 
 // Event listener for image clicks to open the image modal
-document.querySelector('.image-grid').addEventListener('click', function(event) {
+document.querySelector('.image-grid').addEventListener('click', function (event) {
     if (event.target.className === 'image-thumbnail') {
         openImageModal(event.target.src);
     }
@@ -166,7 +68,6 @@ document.querySelector('.image-grid').addEventListener('click', function(event) 
 
 // Function to display the image in a modal
 function displayImageModal(imageSrc) {
-    // Create the modal if it doesn't exist
     let modal = document.getElementById('imageModal');
     if (!modal) {
         modal = document.createElement('div');
@@ -180,33 +81,118 @@ function displayImageModal(imageSrc) {
         `;
         document.body.appendChild(modal);
 
-        // Get the <span> element that closes the modal
         const span = modal.getElementsByClassName("close")[0];
-        span.onclick = function() {
+        span.onclick = function () {
             modal.style.display = "none";
         }
     }
 
-    // Set the image source
     const modalImg = modal.getElementsByClassName('modal-image')[0];
     modalImg.src = imageSrc;
-
-    // Display the modal
     modal.style.display = "block";
 }
 
+let decryptionQueue = [];
+let isDecrypting = false;
+
+function processDecryptionQueue() {
+    if (decryptionQueue.length === 0) {
+        isDecrypting = false;
+        return;
+    }
+
+    isDecrypting = true;
+    const { username, encryptedMessage, callback } = decryptionQueue.shift();
+    decryptMessage(username, encryptedMessage, (error, decryptedMessage) => {
+        callback(error, decryptedMessage);
+        processDecryptionQueue();
+    });
+}
+
+
+export function updateMyFiles() {
+    const username = localStorage.getItem('hive_username');
+    // Hive blockchain API endpoint
+    const spkApiUrl = `https://spktest.dlux.io/@${username}`;
+
+    // Fetch additional user data from SPK API
+    fetch(spkApiUrl)
+        .then(response => response.json())
+        .then(data => {
+            // Handle the SPK API data
+            // Extract and display the Broca balance
+            if (data.broca) {
+                const brocaBalance = data.broca.split(',')[0];
+                document.getElementById('balance').innerText = `Broca: ${brocaBalance}`;
+                document.getElementById('brocaBalance').innerText = `${brocaBalance} BROCA`;
+            }
+            // Extract and display the SPK Power balance
+            if (data.spk_power) {
+                const spkPowerBalance = data.spk_power;
+                document.getElementById('spkPowerBalance').innerText = `${spkPowerBalance} SPK Power`;
+            }
+            // Extract and display the SPK balance
+            if (data.spk) {
+                const spkBalance = data.spk;
+                document.getElementById('spkBalance').innerText = `${spkBalance} SPK`;
+            }
+            updateImagePlaceholders(data.file_contracts);
+            // You can update the UI or perform other actions with the data here
+        })
+        .catch(error => {
+            console.error('Error fetching data from SPK API:', error);
+        });
+}
+// Function to determine file type from raw content
+function getFileType(buffer) {
+    const view = new DataView(buffer);
+
+    if (view.getUint32(0, false) === 0x89504E47) { // "\x89PNG"
+        return 'image/png';
+    } else if (view.getUint16(0, false) === 0xFFD8) { // "\xFF\xD8"
+        return 'image/jpeg';
+    } else if (view.getUint32(0, false) === 0x47494638 || view.getUint32(0, false) === 0x47494639) { // "GIF87a" or "GIF89a"
+        return 'image/gif';
+    } else if (view.getUint32(0, false) === 0x52494646) { // "RIFF"
+        return 'image/webp';
+    } else if (view.getUint32(0, false) === 0x25504446) { // "%PDF"
+        return 'application/pdf';
+    } else if (view.getUint32(0, false) === 0x504B0304) { // "PK\x03\x04"
+        return 'application/zip';
+    } else if (view.getUint32(0, false) === 0x494433 || (view.getUint16(0, false) === 0xFFFB || view.getUint16(0, false) === 0xFFF3)) { // "ID3" or MP3
+        return 'audio/mpeg';
+    } else if (view.getUint32(0, false) === 0x4F676753) { // "OggS"
+        return 'audio/ogg';
+    } else if (view.getUint32(0, false) === 0x664C6143) { // "fLaC"
+        return 'audio/flac';
+    } else if ((view.getUint32(0, false) === 0x52494646) && (view.getUint32(8, false) === 0x57415645)) { // "RIFF....WAVE"
+        return 'audio/wav';
+    } else if (view.getUint16(0, false) === 0x1F8B) { // "\x1F\x8B"
+        return 'application/gzip';
+    } else if (view.getUint32(0, false) === 0x4D546864) { // "MThd"
+        return 'audio/midi';
+    } else if (view.getUint32(4, false) === 0x66747970) { // "ftyp"
+        return 'video/mp4';
+    } else if (view.getUint32(0, false) === 0x464C5601) { // "FLV"
+        return 'video/x-flv';
+    } else if (view.getUint32(0, false) === 0x4F676753 && view.getUint32(28, false) === 0x76696465) { // "OggS....video"
+        return 'video/ogg';
+    } else {
+        console.log('Unknown file type:', buffer);
+        return 'application/octet-stream'; // Default unknown binary data type
+    }
+}
+
 // Function to update image placeholders with images from IPFS hashes
-export function updateImagePlaceholders(fileContracts) {
+export async function updateImagePlaceholders(fileContracts) {
     const imageGrid = document.querySelector('.image-grid');
-    imageGrid.innerHTML = ''; // Clear existing placeholders or images
+    imageGrid.innerHTML = '';
 
     for (const contractId in fileContracts) {
         const contract = fileContracts[contractId];
         if (contract.df) {
             for (const ipfsHash in contract.df) {
                 const fileSize = contract.df[ipfsHash];
-                console.log('IPFS hash:', ipfsHash);
-                console.log('File size:', fileSize);
                 const imageUrl = `https://ipfs.dlux.io/ipfs/${ipfsHash}`;
                 const imageElement = document.createElement('div');
                 imageElement.classList.add('image-placeholder');
@@ -215,45 +201,170 @@ export function updateImagePlaceholders(fileContracts) {
                         <input type="checkbox" class="image-checkbox">
                         <span class="image-checkbox-custom"></span>
                     </label>
-                    <img src="${imageUrl}" class="image-thumbnail" />
+                    <img src="" class="image-thumbnail" />
                     <div class="image-title">${contractId}</div>
                     <button class="add-button">+</button>
                 `;
-                imageElement.dataset.contractId = contract.i; // Save the contract ID in a data attribute
-                imageElement.dataset.fileSize = fileSize; // Save the file size in a data attribute
-                imageGrid.appendChild(imageElement);
+                imageElement.dataset.contractId = contract.i;
+                imageElement.dataset.fileSize = fileSize;
 
-                // Add event listeners for image and button interactions
+                fetch(`https://ipfs.dlux.io/ipfs/${ipfsHash}`)
+                    .then(response => response.text())
+                    .then(fileContent => {
+                        if (fileContent.startsWith('encrypted:')) {
+                            // Log the initial part of the encrypted file content
+                            console.log('Encrypted file:', fileContent.slice(0, 100) + '...');
+                            let fileType = fileContent.slice(10, fileContent.indexOf('#'));
+                            console.log('File type:', fileType);
+                            let removedMetadata = fileContent.slice(fileContent.indexOf('#') + 1);
+                            console.log(removedMetadata.slice(0, 100) + '...');
+                            let parts = removedMetadata.split('#');
+                            let hashCount = (fileContent.match(/#/g) || []).length;
+                            console.log('Number of hashes:', hashCount);
+                            let encryptedKey = parts[1];
+                            let encryptedMessage = parts[2];
+                            let encryptedMessageWithKey = '#'+ encryptedKey + '#' + encryptedMessage;
+                            let fileName = hashCount === 4 ? parts[3] : null;
+                            console.log('Encrypted key:', encryptedKey);
+                            console.log('Encrypted message:', encryptedMessage);
+                            console.log('Encrypted message with key:', encryptedMessageWithKey);
+                            if (fileName) {
+                                console.log('File name:', fileName);
+                            } else {
+                                console.log('File name is missing');
+                            }
+                            decryptionQueue.push({
+                                username: localStorage.getItem('hive_username'),
+                                encryptedMessage: encryptedMessageWithKey,
+                                callback: (error, decryptedMessage) => {
+                                    if (error) {
+                                        console.error('Error decrypting message:', error);
+                                    } else {
+                                        console.log('Decrypted message:', decryptedMessage);
+
+                                        const imageThumbnail = imageElement.querySelector('.image-thumbnail');
+                                        const imageTitle = imageElement.querySelector('.image-title');
+                                        console.log('imageThumbnail:', imageThumbnail);
+                                        console.log('fileType:', fileType);
+                                        if (fileType.startsWith('image/')) {
+                                            console.log('File type is an image:', fileType);
+                                            // convert the decrypted message from base64 to a blob
+                                            // Decoding Base64 string
+                                            const binaryString = window.atob(decryptedMessage);
+                                            const len = binaryString.length;
+                                            const bytes = new Uint8Array(len);
+
+                                            for (let i = 0; i < len; i++) {
+                                                bytes[i] = binaryString.charCodeAt(i);
+                                            }
+
+                                            // Creating the Blob from the typed array
+                                            const imageBlob = new Blob([bytes], {type: fileType});
+
+                                            imageThumbnail.src = URL.createObjectURL(imageBlob);
+                                            // promt the user to download the decrypted image
+                                            imageThumbnail.addEventListener('click', () => {
+                                                const downloadLink = document.createElement('a');
+                                                downloadLink.href = URL.createObjectURL(imageBlob);
+                                                downloadLink.download = 'decrypted-image';
+                                                downloadLink.click();
+                                            });
+                                        } else if(fileType.startsWith('video/')) {
+                                            // Display a video player for MP4 files instead of an image inside the thumbnail
+                                            imageThumbnail.style.display = 'none';
+                                            const videoElement = document.createElement('video');
+                                            // Creating the Blob from the typed array
+                                            const binaryString = window.atob(decryptedMessage);
+                                            const len = binaryString.length;
+                                            const bytes = new Uint8Array(len);
+
+                                            for (let i = 0; i < len; i++) {
+                                                bytes[i] = binaryString.charCodeAt(i);
+                                            }
+                                            videoElement.src = URL.createObjectURL(new Blob([bytes], {type: fileType}));
+                                            videoElement.controls = true;
+                                            videoElement.style.width = '100%';
+                                            videoElement.style.height = '100%';
+                                            videoElement.style.objectFit = 'cover'; // Ensures the video covers the thumbnail without stretching
+                                            imageThumbnail.parentNode.insertBefore(videoElement, imageThumbnail);
+                                        }
+                                        else {
+                                            console.log('File type is not an image:', fileType);
+                                            // If the file is not an image, display the file type
+                                            imageThumbnail.style.display = 'none';
+                                            imageTitle.textContent = `${fileName || 'Unknown file Name'}`;
+                                        }
+                                    }
+                                }
+                            });
+
+                            if (!isDecrypting) {
+                                processDecryptionQueue();
+                            }
+                        } else {
+                            // Handling unencrypted files
+                            fetch(`https://ipfs.dlux.io/ipfs/${ipfsHash}`)
+                                .then(response => response.blob())
+                                .then(blob => blob.arrayBuffer())
+                                .then(arrayBuffer => {
+                                    const fileType = getFileType(arrayBuffer);
+                                    const imageThumbnail = imageElement.querySelector('.image-thumbnail');
+                                    const imageTitle = imageElement.querySelector('.image-title');
+                                    console.log('File type:', fileType);
+                                    if (fileType.startsWith('image/')) {
+                                        imageThumbnail.src = imageUrl;
+                                    } else if (fileType.startsWith('video/mp4')) {
+                                        // Display a video player for MP4 files instead of an image inside the thumbnail
+                                        imageThumbnail.style.display = 'none';
+                                        const videoElement = document.createElement('video');
+                                        videoElement.src = imageUrl;
+                                        videoElement.controls = true;
+                                        videoElement.style.width = '100%';
+                                        videoElement.style.height = '100%';
+                                        videoElement.style.objectFit = 'cover'; // Ensures the video covers the thumbnail without stretching
+                                        imageThumbnail.parentNode.insertBefore(videoElement, imageThumbnail);
+                                    } else {
+                                        console.log('File type:', fileType);
+                                        imageThumbnail.style.display = 'none';
+                                        imageTitle.textContent = `File type: ${fileType}`;
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error fetching file content from IPFS:', error);
+                                });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching file content from IPFS:', error);
+                    });
+
                 addImageEventListeners(imageElement, imageUrl, contract);
                 imageGrid.appendChild(imageElement);
             }
         }
     }
-    // After updating the placeholders, re-attach event listeners to the new checkboxes
     updateCheckboxEventListeners();
 }
 
 // Function to add event listeners for image and button interactions
 function addImageEventListeners(imageElement, imageUrl, contract) {
-    // Add click event listener to open the image in a modal
-    imageElement.querySelector('.image-thumbnail').addEventListener('click', function() {
+    imageElement.querySelector('.image-thumbnail').addEventListener('click', function () {
         displayImageModal(imageUrl);
     });
 
-    // Add click event listener for the "+" button to open the extend and store file modal
-    imageElement.querySelector('.add-button').addEventListener('click', function(event) {
-        event.stopPropagation(); // Prevent the image modal from opening
-        populateStorageNodes(contract.n); // Populate storage nodes list
+    imageElement.querySelector('.add-button').addEventListener('click', function (event) {
+        event.stopPropagation();
+        populateStorageNodes(contract.n);
         document.getElementById('extendStoreModal').style.display = 'block';
-        document.getElementById('extendStoreModal').dataset.contractId = contract.i; // Save the contract ID in the modal's data attribute
+        document.getElementById('extendStoreModal').dataset.contractId = contract.i;
     });
 }
 
 // Function to populate storage nodes in the modal
 function populateStorageNodes(storageNodes) {
     const storageNodesList = document.getElementById('storageNodesList');
-    storageNodesList.innerHTML = ''; // Clear existing nodes
-    Object.values(storageNodes).forEach(function(node) {
+    storageNodesList.innerHTML = '';
+    Object.values(storageNodes).forEach(function (node) {
         const listItem = document.createElement('li');
         listItem.textContent = node;
         storageNodesList.appendChild(listItem);
@@ -264,9 +375,8 @@ function populateStorageNodes(storageNodes) {
 function toggleSelectAllCheckboxes() {
     const checkboxes = document.querySelectorAll('.image-checkbox');
     const allChecked = Array.from(checkboxes).every(checkbox => checkbox.checked);
-    console.log(`Select All button clicked: ${allChecked ? 'Deselecting all checkboxes' : 'Selecting all checkboxes'}`);
     checkboxes.forEach(checkbox => checkbox.checked = !allChecked);
-    toggleStoreFilesButtonVisibility(); // Update the "Store Files" button visibility based on the new checkbox states
+    toggleStoreFilesButtonVisibility();
 }
 
 // Function to toggle the "Store Files" button visibility based on selected checkboxes
@@ -277,7 +387,7 @@ function toggleStoreFilesButtonVisibility() {
 
 // Function to update event listeners for checkboxes
 function updateCheckboxEventListeners() {
-    document.querySelectorAll('.image-checkbox').forEach(function(checkbox) {
+    document.querySelectorAll('.image-checkbox').forEach(function (checkbox) {
         checkbox.addEventListener('change', toggleStoreFilesButtonVisibility);
     });
 }
@@ -294,25 +404,23 @@ function openExtendDurationModal() {
 
 // Function to calculate and display the cost for the selected duration
 function calculateExtendCost(fileSize) {
-    console.log('Calculating cost for file size:', fileSize);
     const durationSelect = document.getElementById('extendDurationSelect');
     const duration = durationSelect.value;
-    const costPer1024Bytes = 10; // Cost per 1024 bytes
-    const cost = Math.ceil(fileSize / 1024) * costPer1024Bytes * duration; // Calculate the cost
-    document.getElementById('extendCost').innerText = `Cost: ${cost} BROCA`; // Display the cost
-    document.getElementById('extendDurationForm').setAttribute('data-duration', duration); // Store the duration in the form attribute
-    document.getElementById('extendDurationForm').setAttribute('data-cost', cost); // Store the cost in the form attribute
+    const costPer1024Bytes = 10;
+    const cost = Math.ceil(fileSize / 1024) * costPer1024Bytes * duration;
+    document.getElementById('extendCost').innerText = `Cost: ${cost} BROCA`;
+    document.getElementById('extendDurationForm').setAttribute('data-duration', duration);
+    document.getElementById('extendDurationForm').setAttribute('data-cost', cost);
 }
 
 // Function to display all contracts
 export function displayAllContracts() {
-    console.log("filter")
     fetch('https://spktest.dlux.io/feed')
         .then(response => response.json())
         .then(data => {
             const feed = data.feed;
             const filterToggle = document.getElementById('filterContractsToggle').checked;
-            const filteredFeed = Object.entries(feed)
+            const filteredFeed = Object.entries(feed);
 
             const usernames = filteredFeed.map(([_, entry]) => {
                 const match = entry.match(/@(\w+)/);
@@ -325,14 +433,12 @@ export function displayAllContracts() {
                     .then(response => response.json())
                     .then(userData => {
                         const fileContracts = userData.file_contracts || {};
-                        // Filter logic here, for example, to keep contracts with more than 3 storage nodes:
                         const filteredContracts = {};
                         for (const contractId in fileContracts) {
                             const contract = fileContracts[contractId];
                             if (filterToggle && Object.keys(contract.n).length < 3) {
                                 filteredContracts[contractId] = contract;
-                            }
-                            else if (!filterToggle) {
+                            } else if (!filterToggle) {
                                 filteredContracts[contractId] = contract;
                             }
                         }
@@ -348,8 +454,8 @@ export function displayAllContracts() {
                 const combinedContracts = Object.assign({}, ...allContracts);
                 updateImagePlaceholders(combinedContracts);
             });
-            document.querySelector('.image-grid').style.display = 'grid'; // Show the image grid
-            document.getElementById('walletContent').style.display = 'none'; // Hide the wallet content
+            document.querySelector('.image-grid').style.display = 'grid';
+            document.getElementById('walletContent').style.display = 'none';
         })
         .catch(error => {
             console.error('Error fetching feed:', error);
@@ -358,18 +464,12 @@ export function displayAllContracts() {
 
 // Function to display the user's files
 export function displayMyFiles() {
-    const username = localStorage.getItem('hive_username');
     if (username) {
-        // Fetch user's files from the blockchain or a database
-        // For demonstration, we'll call a function that updates the image placeholders
-        // This should be replaced with actual logic to fetch user's files
-        updateUserProfilePicture(username); // Assuming this function fetches and displays the files
-        document.querySelector('.image-grid').style.display = 'grid'; // Show the image grid
-        document.getElementById('walletContent').style.display = 'none'; // Hide the wallet content
+        updateMyFiles();
+        document.querySelector('.image-grid').style.display = 'grid';
+        document.getElementById('walletContent').style.display = 'none';
     } else {
-        // If no username is found, display a message or redirect to login
-        console.log('User is not logged in. Redirecting to login...');
-        window.location.hash = '#login'; // Redirect to login page or display a message
+        window.location.hash = '#login';
     }
 }
 
@@ -383,7 +483,7 @@ document.getElementById('storeFilesButton').addEventListener('click', storeSelec
 document.getElementById('extendButton').addEventListener('click', openExtendDurationModal);
 
 // Add event listener for the "Extend" button to calculate cost when modal opens
-document.getElementById('extendButton').addEventListener('click', function() {
+document.getElementById('extendButton').addEventListener('click', function () {
     const extendModal = document.getElementById('extendStoreModal');
     const contractId = extendModal.dataset.contractId;
     const imageElement = document.querySelector(`.image-placeholder[data-contract-id="${contractId}"]`);
@@ -392,12 +492,51 @@ document.getElementById('extendButton').addEventListener('click', function() {
 });
 
 // Add event listener for changes to the duration select to recalculate cost
-document.getElementById('extendDurationSelect').addEventListener('change', function() {
+document.getElementById('extendDurationSelect').addEventListener('change', function () {
     const extendModal = document.getElementById('extendStoreModal');
     const contractId = extendModal.dataset.contractId;
     const imageElement = document.querySelector(`.image-placeholder[data-contract-id="${contractId}"]`);
     const fileSize = imageElement ? parseInt(imageElement.dataset.fileSize, 10) : 0;
     calculateExtendCost(fileSize);
+});
+
+document.getElementById('deleteFileButton').addEventListener('click', function() {
+    const username = localStorage.getItem('hive_username');
+    const extendModal = document.getElementById('extendStoreModal');
+    const contractId = extendModal.dataset.contractId; // Retrieve the contract ID from the modal's data attribute
+
+    if (username && contractId && window.hive_keychain) {
+        const operations = [
+            [
+                "custom_json",
+                {
+                    "required_auths": [username],
+                    "required_posting_auths": [],
+                    "id": "spkcc_contract_close",
+                    "json": JSON.stringify({
+                        "id": contractId
+                    })
+                }
+            ]
+        ];
+        window.hive_keychain.requestBroadcast(
+            username,
+            operations,
+            'Active',
+            function(response) {
+                console.log('Delete operation broadcast response:', response);
+                if (response.success) {
+                    // Handle success, update UI accordingly
+                    alert('Delete request successfully broadcasted to the blockchain.');
+                } else {
+                    // Handle error, update UI accordingly
+                    alert('Failed to broadcast delete request: ' + response.message);
+                }
+            }
+        );
+    } else {
+        alert('Hive Keychain is not installed or the contract ID is missing.');
+    }
 });
 
 // Add event listener for the "Extend Contract" button
@@ -407,7 +546,7 @@ document.getElementById('extendContractButton').addEventListener('click', extend
 document.getElementById('filterContractsToggle').addEventListener('change', displayAllContracts);
 
 // Close the modal if the user clicks outside of it
-window.onclick = function(event) {
+window.onclick = function (event) {
     var extendModal = document.getElementById('extendDurationModal');
     var loginModal = document.getElementById('loginModal');
     var powerUpModal = document.getElementById('powerUpModal');
@@ -429,6 +568,7 @@ function handleHashChange() {
     if (hash === '#allContracts') {
         displayAllContracts();
     } else if (hash === '#myFiles') {
+        console.log('Displaying my files');
         displayMyFiles();
     } else if (hash === '#wallet') {
         displayWallet();

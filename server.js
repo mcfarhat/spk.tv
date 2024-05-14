@@ -23,7 +23,8 @@ app.listen(port, () => {
 const streamBlockchain = (startBlock) => {
     console.log(`Starting to stream the blockchain from block: ${startBlock}...`);
 
-    client.blockchain.getBlockStream(startBlock).on('data', block => {
+    client.blockchain.getBlockStream().on('data', block => {
+        console.log('Processing block:', block.block_id);
         block.transactions.forEach(transaction => {
             transaction.operations.forEach(operation => {
                 const [type, data] = operation;
