@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hive Keychain Login Example</title>
+  <link rel="stylesheet" href="style.css"> <!-- Link to your CSS file -->
+</head>
+<body>
+<!-- Navigation bar -->
+<div class="main-container">
+<nav>
+  <div class="nav-left"> <!-- Left side of the nav, for branding or other links -->
+    <img src="spk.png" alt="Logo" id="navLogo" />
+    <!-- Add branding or other links here -->
+  </div>
+  <div class="nav-right"> <!-- Right side of the nav for login -->
+    <div id="balance"></div>
+    <button id="loginButton">Login</button>
+  </div>
+</nav>
+  <!-- Main content area -->
+  <div class="content-area">
+    <!-- Toggle for filtering contracts -->
+    <div class="filter-toggle">
+      <label><input type="checkbox" id="filterContractsToggle"> Show contracts with less than 3 storage nodes</label>
+      <button id="selectAllButton">Select All</button>
+      <button id="storeFilesButton" style="display: none;">Store Files</button>
+    </div>
+    <!-- Sidebar -->
+    <div id="sidebar">
+      <button id="newButton">+ New</button>
+      <!-- Additional sidebar content can go here -->
+      <a href="#myFiles">My Files</a>
+      <a href="#allContracts">All Contracts</a>
+      <a href="#wallet">Wallet</a>
+    </div>
+    <!-- New File Modal -->
+    <div id="newFileModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <div class="modal-steps-header">
+          <div class="modal-step-tab active">Step 1: Select File</div>
+          <div class="modal-step-tab">Step 2: Create Contract</div>
+          <div class="modal-step-tab">Step 3: Upload File</div>
+        </div>
+        <form id="newFileForm">
+          <div class="modal-step">
+            <h3>Step 1: Select File</h3>
+            <div id="fileDropArea" class="drop-area">
+                <p>Drag and drop a file here, or click to select a file</p>
+                <input type="file" id="fileUpload" name="fileUpload" required hidden>
+            </div>
+            <button type="button" id="nextToStep2" style="margin-top: 20px;">Next</button>
+          </div>
+          <div class="modal-step" id="step2" style="display: none;">
+    <h3>Step 2: Create Contract</h3>
+    <label for="serviceProvider">Select Service Provider:</label>
+    <select id="serviceProvider" name="serviceProvider">
+      <option value="provider1">Provider 1</option>
+      <option value="provider2">Provider 2</option>
+      <!-- Add more service providers as needed -->
+    </select>
+    <div id="statusBar" style="display: none;">Status: <span id="statusMessage">Waiting...</span></div>
+    <div>
+      <label>Channels:</label>
+      <ul id="channelsList">
+        <!-- Channels will be added here -->
+      </ul>
+    </div>
+    <button type="button" id="createContractButton">Create Contract</button>
+    <button type="button" id="freeContractButton">Free Contract</button>
+    <button type="button" id="nextToStep3">Next</button>
+  </div>
+          <div class="modal-step" id="step3" style="display: none;">
+    <h3>Step 3: Upload File</h3>
+    <div id="uploadStatusContainer" class="upload-status-container">
+        <!-- The upload status bar will be inserted here by the script -->
+    </div>
+    <button type="submit" id="uploadFileButton">Upload File</button>
+  </div>
+          </form>
+        </div>
+      </div>
+      <!-- Extend and Store File Modal -->
+<div id="extendStoreModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <button id="extendButton">Extend</button>
+    <button id="storeFileButton">Store File</button>
+    <div class="storage-nodes-section">
+      <h3>STORAGE NODES</h3>
+      <ul id="storageNodesList">
+        <li>Node Placeholder 1</li>
+        <li>Node Placeholder 2</li>
+        <li>Node Placeholder 3</li>
+      </ul>
+    </div>
+  </div>
+</div>
+<!-- Extend Duration Modal -->
+<div id="extendDurationModal" class="modal">
+  <div class="modal-content">
+    <span class="close">&times;</span>
+    <h3>Extend Storage Duration</h3>
+    <form id="extendDurationForm">
+      <label>Select duration:</label>
+      <select id="extendDurationSelect">
+        <option value="1">1 Day</option>
+        <option value="7">1 Week</option>
+        <option value="30">1 Month</option>
+        <option value="365">1 Year</option>
+      </select>
+      <p id="extendCost">Cost: </p>
+      <button type="button" id="extendContractButton">Extend Contract</button>
+      <!-- Calculate Cost button removed, cost is now calculated automatically -->
+    </form>
+  </div>
+</div>
+<!-- Rest of the page content -->
+      <div class="page-content">
+        <!-- Image grid container -->
+        <div class="wallet-content" id="walletContent">
+          <div class="spk-wallet-section">
+            <div class="spk-wallet-header">
+              <h2>SPK Token <span class="test-badge">TEST</span></h2>
+              <p>The governance token for the SPK network.</p>
+            </div>
+            <div class="spk-wallet-balance">
+              <span id="spkBalance">0 SPK</span>
+          </div>
+            <button id="sendButton" class="spk-send-btn" aria-label="Send SPK Tokens">
+              <i class="fa fa-paper-plane"></i> Send
+            </button>
+            <button id="powerUpButton" class="spk-power-up-btn" aria-label="Power Up SPK Tokens">
+              <i class="fa fa-paper-plane"></i> Power Up
+            </button>
+          </div>
+          <div class="spk-wallet-section">
+          <div class="spk-wallet-header">
+            <h2>BROCA <span class="test-badge">TEST</span></h2>
+            <p>Resource Credits for the SPK network.</p>
+          </div>
+            <div class="spk-wallet-balance">
+            <span id="brocaBalance">0 BROCA</span>
+          </div>
+          <div class="spk-wallet-section">
+            <div class="spk-wallet-header">
+              <h2>SPK Power <span class="test-badge">TEST</span></h2>
+              <p>Powered SPK for Voting.</p>
+            </div>
+            <div class="spk-wallet-balance">
+              <span id="spkPowerBalance">0 SPK Power</span>
+            </div>
+            </div>
+          </div>
+        </div>
+        </div>
+        <div class="image-grid">
+          <!-- Placeholder for an image -->
+          <div class="image-placeholder">
+            <div class="image-checkbox-container">
+              <input type="checkbox" class="image-checkbox" id="image1">
+              <label for="image1" class="image-checkbox-label"></label>
+            </div>
+            <div class="image-thumbnail"></div>
+            <div class="image-title">Title</div>
+          </div>
+          <!-- Repeat the above block for as many placeholders as needed -->
+          <!-- Images will be added here -->
+        </div>
+        <!-- Your page content goes here -->
+      </div>
+    </div>
+    <!-- Power Up SPK Modal -->
+    <div id="powerUpModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <h3>Power Up SPK</h3>
+        <form id="powerUpForm">
+          <label for="powerUpAmount">Amount:</label>
+          <input type="number" id="powerUpAmount" name="powerUpAmount" required>
+          <p id="availableSPKBalance" class="clickable-balance">0 SPK</p>
+          <button type="submit" id="confirmPowerUpButton">Power Up</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <span class="close">&times;</span>
+        <form id="loginForm">
+          <label for="username">Hive Username:</label>
+          <input type="text" id="username" name="username" required>
+          <button type="submit">Login with Hive Keychain</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="loginStatus"></div>
+
+    <!-- Your custom JS -->
+    <script src="dist/bundle.js"></script>
+    </body>
+    </html>
