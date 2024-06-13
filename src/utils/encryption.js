@@ -3,14 +3,13 @@ import CryptoJS from 'crypto-js';
 export function encryptMessage(username, message, callback) {
     let key = generateRandomHash();
     key = "#" + key;
-    hive_keychain.requestEncodeMessage(username, username, key, 'Memo', (response) => {
+    window.hive_keychain.requestEncodeMessage(username, username, key, 'Memo', (response) => {
         if (response.success) {
             let encryptedKey = response.result;
             console.log("Encrypted key: ", response.result);
             let encryptedMessage = sha256Encrypt(message, key);
             console.log("Encrypted message: ", encryptedMessage);
-            // Return Message with encrypted key appended
-            let encryptedMessageWithKey = "#"+ encryptedKey +"#"+ encryptedMessage;
+            let encryptedMessageWithKey = "#" + encryptedKey + "#" + encryptedMessage;
             callback(null, encryptedMessageWithKey);
         } else {
             callback(response.message, null);
@@ -23,7 +22,7 @@ export function decryptMessage(username, encryptedMessage, callback) {
     console.log("Encrypted key: ", encryptedKey);
     let encryptedMessageOnly = encryptedMessage.split("#")[2];
     console.log("Encrypted message: ", encryptedMessageOnly);
-    hive_keychain.requestVerifyKey(username, '#'+encryptedKey, 'Memo', (response) => {
+    window.hive_keychain.requestVerifyKey(username, '#' + encryptedKey, 'Memo', (response) => {
         if (response.success) {
             let key = response.result;
             console.log("Decrypted key: ", response.result);
