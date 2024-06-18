@@ -103,6 +103,14 @@ function handleLoginFormSubmit(event) {
                                 },
                                 'Register Authority'
                             );
+                            const sidebarBalance = document.getElementById('sidebarBalance');
+                            if (sidebarBalance) {
+                                sidebarBalance.innerText = `${brocaBalance} BROCA`;
+                            }
+                            const balanceElement = document.getElementById('balance');
+                            if (balanceElement) {
+                                sidebarBalance.innerText = balanceElement.innerText;
+                            }
                         }
 
                     } catch (error) {
@@ -178,10 +186,18 @@ function updateUserProfilePicture(username) {
                 const profilePictureUrl = postingMetaData.profile && postingMetaData.profile.profile_image ? postingMetaData.profile.profile_image : 'default_profile_pic_url.jpg';
 
                 // Update the login button to show the profile picture
-                var loginButton = document.getElementById("loginButton");
+                const loginButton = document.getElementById("loginButton");
+                const sidebarLoginButton = document.getElementById("sidebarLoginButton");
+
                 loginButton.style.backgroundImage = "url('" + profilePictureUrl + "')";
                 loginButton.style.backgroundSize = 'cover';
                 loginButton.textContent = ''; // Remove the text from the button
+
+                if (sidebarLoginButton) {
+                    sidebarLoginButton.style.backgroundImage = "url('" + profilePictureUrl + "')";
+                    sidebarLoginButton.style.backgroundSize = 'cover';
+                    sidebarLoginButton.textContent = ''; // Remove the text from the button
+                }
 
                 // Fetch additional user data from SPK API
                 fetch(spkApiUrl)

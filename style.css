@@ -3,6 +3,27 @@ body {
     display: block; /* Use block layout to allow sidebar and content to be positioned manually */
 }
 
+/* Hide elements by default in mobile view */
+.mobile-only {
+    display: none;
+}
+
+/* Hide elements by default in desktop view */
+.desktop-only {
+    display: block;
+}
+
+/* Show elements in mobile view */
+@media screen and (max-width: 768px) {
+    .mobile-only {
+        display: block;
+    }
+
+    .desktop-only {
+        display: none;
+    }
+}
+
 /* Logo styling */
 #navLogo {
     height: 40px; /* Adjust the height as needed */
@@ -17,31 +38,37 @@ body {
     left: 0;
     width: 250px; /* Adjust width as needed */
     height: 100vh; /* Full viewport height */
-    background-color: #f4f4f4; /* Light grey background */
+    background: rgba(255, 255, 255, 0.2); /* Semi-transparent background */
+    backdrop-filter: blur(10px); /* Background blur */
+    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Border to enhance glass effect */
     padding: 10px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
 /* Style for the modal steps header */
 .modal-steps-header {
-  display: flex;
-  justify-content: space-evenly;
-  margin-bottom: 20px;
+    display: flex;
+    justify-content: space-evenly;
+    margin-bottom: 20px;
+    font-family: 'Arial', sans-serif; /* Better font for readability */
 }
 
 /* Style for each tab in the modal steps header */
 .modal-step-tab {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-bottom: none;
-  cursor: pointer;
+    padding: 12px;
+    border-bottom: 1px solid #363636;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.8); /* Slightly transparent background */
+    border-radius: 5px 5px 0 0; /* Rounded top corners */
+    color: black; /* Set text color to black */
 }
 
 /* Style for the active tab */
 .modal-step-tab.active {
-  background-color: red;
-  color: white;
-  font-weight: bold;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    font-weight: bold;
 }
 
 /* Style for the main content area to the right of the sidebar */
@@ -85,7 +112,10 @@ nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #333;
+    background: rgba(51, 51, 51, 0.8); /* Semi-transparent background */
+    backdrop-filter: blur(10px); /* Background blur */
+    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* Border to enhance glass effect */
     color: white;
     padding: 10px;
     margin: 0;
@@ -105,7 +135,7 @@ nav {
 /* Basic styling for the modal */
 .modal {
     display: none;
-  padding: 20px;
+    padding: 20px;
     position: fixed;
     z-index: 2;
     left: 0;
@@ -117,13 +147,37 @@ nav {
 }
 
 .modal-content {
-    background-color: #fefefe;
-    margin: 15% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 600px; /* Set a max-width for the modal content */
+    background: rgba(255, 255, 255, 0.2); /* Semi-transparent background */
+    backdrop-filter: blur(10px); /* Background blur */
+    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Border to enhance glass effect */
+    margin: 10% auto;
+    padding: 30px;
+    width: 90%;
+    max-width: 500px; /* Set a max-width for the modal content */
     overflow: hidden; /* Prevents the content from overflowing */
+    border-radius: 10px; /* Rounded corners */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    font-family: 'Arial', sans-serif; /* Better font for readability */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.modal-content-box {
+    background: rgba(0, 0, 0, 0.55); /* Darker background */
+    padding: 20px;
+    border-radius: 8px;
+    width: 100%;
+    max-width: 460px; /* Slightly smaller than the modal content */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Subtle shadow for depth */
+    color: white; /* Set text color to white */
 }
 
 .modal-image {
@@ -137,14 +191,14 @@ nav {
     float: right;
     font-size: 28px;
     font-weight: bold;
+    transition: color 0.3s ease; /* Smooth transition */
 }
 
 .close:hover,
 .close:focus {
-    color: black;
+    color: #333; /* Darker color on hover */
     text-decoration: none;
     cursor: pointer;
-    margin-right: 10px; /* Add space to the right of the balance */
 }
 
 /* Style for login button with profile image */
@@ -162,7 +216,7 @@ nav {
 /* Style for the image modal */
 .image-modal {
     display: none;
-  padding: 20px;
+    padding: 20px;
     position: fixed;
     z-index: 2;
     left: 0;
@@ -174,6 +228,10 @@ nav {
 }
 
 .image-modal-content {
+    background: rgba(255, 255, 255, 0.2); /* Semi-transparent background */
+    backdrop-filter: blur(10px); /* Background blur */
+    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Border to enhance glass effect */
     margin: 10% auto;
     display: block;
     width: 80%;
@@ -332,7 +390,10 @@ nav {
 }
 /* SPK Wallet Section Styles */
 .spk-wallet-section {
-    background-color: #333;
+    background: rgba(51, 51, 51, 0.8); /* Semi-transparent background */
+    backdrop-filter: blur(10px); /* Background blur */
+    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    border: 1px solid rgba(255, 255, 255, 0.3); /* Border to enhance glass effect */
     color: white;
     padding: 20px;
     border-radius: 8px;
@@ -422,7 +483,10 @@ nav {
 }
 /* Style for the drop file area */
 .drop-area {
-    border: 2px dashed #ccc;
+    background: rgba(255, 255, 255, 0.2); /* Semi-transparent background */
+    backdrop-filter: blur(10px); /* Background blur */
+    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    border: 2px dashed rgba(255, 255, 255, 0.3); /* Border to enhance glass effect */
     border-radius: 4px;
     padding: 20px;
     text-align: center;
@@ -433,10 +497,100 @@ nav {
 .drop-area p {
     margin: 0;
     font-size: 16px;
-    color: #666;
+    color: white; /* Set text color to white */
 }
 
 /* Change the hover state of the drop area */
 .drop-area:hover {
     border-color: #333;
+}
+/* Burger icon styling */
+#burgerIcon {
+    display: none;
+    cursor: pointer;
+    font-size: 24px;
+    margin-left: 20px;
+}
+
+#burgerIcon div {
+    width: 25px;
+    height: 3px;
+    background-color: white;
+    margin: 4px 0;
+}
+
+/* Responsive sidebar styling */
+@media screen and (max-width: 768px) {
+    #sidebar {
+        position: fixed;
+        top: 65px;
+        left: -100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.95);
+        transition: left 0.3s ease;
+        z-index: 2000; /* Ensure the sidebar is on top of everything else */
+    }
+
+    #sidebar.open {
+        left: 0;
+    }
+
+    .content-area {
+        margin-left: 0;
+        padding-top: 70px;
+    }
+
+    #burgerIcon {
+        display: block;
+    }
+}
+
+/* Basic styling for navigation bar */
+nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(51, 51, 51, 0.8); /* Semi-transparent background */
+    backdrop-filter: blur(10px); /* Background blur */
+    -webkit-backdrop-filter: blur(10px); /* Safari support */
+    border-bottom: 1px solid rgba(255, 255, 255, 0.3); /* Border to enhance glass effect */
+    color: white;
+    padding: 10px;
+    margin: 0;
+    position: fixed; /* Make the nav bar fixed */
+    top: 0; /* Position it at the top */
+    left: 0; /* Stretch it to the left edge */
+    right: 0; /* Stretch it to the right edge */
+    z-index: 1000; /* Ensure it stays on top of other content */
+}
+
+/* Ensure image placeholders have a lower z-index */
+.image-placeholder {
+    position: relative;
+    z-index: 1; /* Set a lower z-index for image placeholders */
+}
+#sidebarBalance {
+    display: none; /* Hide by default */
+}
+
+#sidebarLoginButton {
+    background-size: contain; /* Adjust the background size to contain to make it larger */
+    background-repeat: no-repeat;
+    background-position: center;
+    width: 50px; /* Set a fixed width */
+    height: 50px; /* Set a fixed height */
+    border-radius: 50%; /* Make the button round */
+    overflow: hidden; /* Ensure the image doesn't overflow the rounded corners */
+    align-self: center; /* Center the button vertically within the nav bar */
+    display: none; /* Hide by default */
+}
+
+@media screen and (max-width: 768px) {
+    #sidebarBalance {
+        display: block; /* Show in mobile view */
+    }
+
+    #sidebarLoginButton {
+        display: block; /* Show in mobile view */
+    }
 }

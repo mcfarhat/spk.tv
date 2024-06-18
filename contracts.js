@@ -89,6 +89,7 @@ export function pollForNewChannels(username) {
     const statusMessage = document.getElementById('statusMessage');
     statusBar.style.display = 'block'; // Show the status bar
     statusMessage.textContent = 'Looking for open channels...'; // Initial status message
+    statusBar.style.display = 'block'; // Show the status bar with spinner
     const pollInterval = 5000; // Poll every 5 seconds
     const maxAttempts = 12; // Try for 1 minute
     let attempts = 0;
@@ -100,15 +101,15 @@ export function pollForNewChannels(username) {
             if (channelsList.children.length > 0) {
                 // If new channels are found, stop polling and hide the status bar
                 statusBar.style.display = 'none';
-                // If new channels are found, stop polling
+                statusBar.style.display = 'none'; // Hide the status bar with spinner
                 return;
             }
             attempts++;
-            statusMessage.textContent = `Polling for channels... (${attempts}/${maxAttempts})`; // Update status message
+            statusMessage.textContent = `Creating Contract... (${attempts}/${maxAttempts})`; // Update status message
             setTimeout(poll, pollInterval);
         } else {
             statusMessage.textContent = 'No open channels found after 1 minute.';
-            alert('No open channels found after 1 minute.');
+            alert('No open contract found after 1 minute please try again.');
             statusBar.style.display = 'none'; // Hide the status bar
         }
     };

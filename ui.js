@@ -211,7 +211,8 @@ export async function updateImagePlaceholders(fileContracts) {
                 fetch(`https://ipfs.dlux.io/ipfs/${ipfsHash}`)
                     .then(response => response.text())
                     .then(fileContent => {
-                        if (fileContent.startsWith('encrypted:')) {
+                        // Handling encrypted files for logged in user
+                        if (fileContent.startsWith('encrypted:') && contract.t === localStorage.getItem('hive_username')) {
                             // Log the initial part of the encrypted file content
                             console.log('Encrypted file:', fileContent.slice(0, 100) + '...');
                             let fileType = fileContent.slice(10, fileContent.indexOf('#'));
