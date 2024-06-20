@@ -517,7 +517,6 @@ nav {
 .drop-area:hover {
     border-color: #333;
 }
-/* Burger icon styling */
 #burgerIcon {
     display: none;
     cursor: pointer;
@@ -532,8 +531,11 @@ nav {
     margin: 4px 0;
 }
 
-/* Responsive sidebar styling */
 @media screen and (max-width: 768px) {
+    #burgerIcon {
+        display: block;
+    }
+
     #sidebar {
         position: fixed;
         top: 65px;
@@ -551,10 +553,6 @@ nav {
     .content-area {
         margin-left: 0;
         padding-top: 70px;
-    }
-
-    #burgerIcon {
-        display: block;
     }
 }
 
