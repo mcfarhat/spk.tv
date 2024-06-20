@@ -26,6 +26,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const desktopLoginButton = document.getElementById('loginButton');
     const sidebarLoginButton = document.getElementById('sidebarLoginButton');
 
+    const username = localStorage.getItem('hive_username');
+
+    // Show sidebar only if logged in
+    const sidebar = document.getElementById('sidebar');
+    if (username) {
+        sidebar.style.display = 'block';
+        sidebar.classList.add('logged-in');
+    } else {
+        sidebar.classList.remove('logged-in');
+        sidebar.style.display = 'none';
+    }
+
     // Sync balance and login button for sidebar
     if (desktopBalance && sidebarBalance) {
         sidebarBalance.innerHTML = desktopBalance.innerHTML;

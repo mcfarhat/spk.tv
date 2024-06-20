@@ -44,6 +44,19 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.3); /* Border to enhance glass effect */
     padding: 10px;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    display: none; /* Hide by default */
+}
+
+@media screen and (max-width: 768px) {
+    #sidebar {
+        display: block; /* Show in mobile view */
+    }
+}
+
+@media screen and (min-width: 769px) {
+    #sidebar.logged-in {
+        display: block; /* Show in desktop view when logged in */
+    }
 }
 
 /* Style for the modal steps header */

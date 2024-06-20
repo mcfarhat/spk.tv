@@ -113,6 +113,7 @@ function handleLoginFormSubmit(event) {
                             }
                         }
 
+                        window.location.reload(); // Automatically refresh the page after successful login
                     } catch (error) {
                         console.error('Error fetching public keys:', error);
                     }
